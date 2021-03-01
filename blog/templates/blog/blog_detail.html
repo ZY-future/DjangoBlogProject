@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}{{ blog.title }}{% endblock %}
+{% block nav_blog_active %}active{% endblock %}
+{% load staticfiles %}
+{% block header_extends %}
+    <link rel="stylesheet" href="{% static '/css/blog.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-10  col-md-offset-1">
+                <h3>{{ blog.title }}</h3>
+                <ul class="blog-info-description">
+                    <li>作者：{{ blog.author }}</li>
+                    <li>
+                        <a href="{% url 'blog_with_type' blog.blog_type.pk %}"> 博客类型：{{ blog.blog_type }}</a>
+                    </li>
+                    {#过滤器#}
+                    <li>发表时间：{{ blog.create_time | date:"Y-m-d H:m:s" }}</li>
+                    <li>阅读人次：{{ blog.get_read_num }}</li>
+                </ul>
+                {#    {{ blog.blog_type }}#}
+                <div class="blog-content">{{ blog.content | safe }}</div>
+                <div class="blog-more">
+                    {% if previous_blog is None %}
+                        <p>这是第一篇，已经到头了</p>
+                    {% else %}
+                        <p><a href="{% url 'blog_detail' previous_blog.pk %}">上一篇:{{ previous_blog.title }}</a></p>
+                    {% endif %}
+                    {% if next_blog is None %}
+                        <p>这是最后一篇博客，已经到尾了</p>
+                    {% else %}
+                        <p><a href="{% url 'blog_detail' next_blog.pk %}">下一篇:{{ next_blog.title }}</a></p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-10 col-md-offset-1">
+                <div class="comment-area">
+                    <h3 class="comment-area-title">提交评论区域</h3>
+                    {% if user.is_authenticated %}
+
+                        <form action="{% url 'update_comment' %}" method="post" style="overflow: hidden">
+
+                            <label for="">{{ user.username }},欢迎评论~</label>
+                            {% csrf_token %}
+                            {{ comment_form }}
+                            {#                            <div class="from-group">#}
+                            {#                                <label for="comment-text">{{ user.username }}</label>#}
+                            {#                                <textarea id="comment-text" cols="5" class="form-control" type="text" name="text"></textarea>#}
+                            {#                            </div>#}
+                            {##}
+                            {#                            <input type="hidden" name="object_id" value="{{ blog.pk }}">#}
+                            {#                            <input type="hidden" name="content_type" value="blog">#}
+                            <input type="submit" value="评论" class="btn btn-primary" style="float: right">
+                        </form>
+                    {% else %}
+                        未登录,登陆后可评论
+                        <a class="btn-primary btn" href="{% url 'login' %}?from={{ request.get_full_path }}">登录</a>
+                        <span>or</span>
+                        <a class="btn btn-danger" href="{% url 'register' %}?from={{ request.get_full_path }}">注册</a>
+                    {% endif %}
+                </div>
+                <div class="comment-area"><h3 class="comment-area-title">
+                    评论列表区域
+                </h3>
+                    {% for comment in comments %}
+                        <div>
+                            {{ comment.user.username }}({{ comment.comment_time|date:"Y-m-d H:m:s" }}):
+                            {{ comment.text }}
+
+                        </div>
+                    {% empty %}
+                        暂无评论
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
